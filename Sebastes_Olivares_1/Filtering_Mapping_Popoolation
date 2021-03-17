@@ -1,0 +1,15 @@
+#filtering parameters using Trimmomatic
+java -jar /usr/local/bin/trimmomatic-0.35.jar PE -threads 24 [R1] [R2] -baseout [species] ILLUMINACLIP:TruSeq3-PE-2:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36
+
+#mapping reads with bwa
+bwa index genome.fasta
+samtools faidx genome.fasta
+bwa mem -t 24 [reference fasta] [R1] [R2] > species_aln.sam
+samtools view -bS -q 20 species_aln.sam | samtools sort - species_aln
+samtools index species_aln.bam
+
+#variant calling
+samtools mpileup -B species1_aln.bam  species2_aln2.bam > species1_species2.mpileup
+java -ea -Xmx7g -jar <popoolation2-path>/mpileup2sync.jar --input species1_species2.mpileup --output species1_species2_java.sync --fastq-type sanger --min-qual 20 --threads 24
+perl <popoolation2-path>/snp-frequency-diff.pl --input species1_species2_java.sync --output-prefix species1_species2 --min-count 6 --min-coverage 80 --max-coverage 2000
+perl <popoolation2-path>/fst-sliding.pl --input species1_species2_java.sync --output species1_species2.fst --suppress-noninformative --min-count 6 --min-coverage 80 --max-coverage  2000 --min-covered-fraction 1 --window-size 1 --step-size 1 --pool-size 20
