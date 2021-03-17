@@ -1,14 +1,19 @@
 #filtering parameters using Trimmomatic
+#[R1] and [R2] are the forward and reverse reads for each species
+#[species] is the identifier for each species
 java -jar /usr/local/bin/trimmomatic-0.35.jar PE -threads 24 [R1] [R2] -baseout [species] ILLUMINACLIP:TruSeq3-PE-2:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36
 
 #mapping reads with bwa
+#genome.fasta is current Sebastes genome
 bwa index genome.fasta
 samtools faidx genome.fasta
+#[R1] and [R2] are the output from Trimmomatic; species is identifier for each species
 bwa mem -t 24 [reference fasta] [R1] [R2] > species_aln.sam
 samtools view -bS -q 20 species_aln.sam | samtools sort - species_aln
 samtools index species_aln.bam
 
 #variant calling
+#species1_aln.bam and species2_aln.bam are from above.  only comparing between closely realted species pairs
 samtools mpileup -B species1_aln.bam  species2_aln2.bam > species1_species2.mpileup
 java -ea -Xmx7g -jar <popoolation2-path>/mpileup2sync.jar --input species1_species2.mpileup --output species1_species2_java.sync --fastq-type sanger --min-qual 20 --threads 24
 perl <popoolation2-path>/snp-frequency-diff.pl --input species1_species2_java.sync --output-prefix species1_species2 --min-count 6 --min-coverage 80 --max-coverage 2000
