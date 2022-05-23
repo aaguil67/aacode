@@ -14,7 +14,7 @@ samtools sort -@ 20 -o species_sort.bam species_aln.bam
 samtools index species_sort.bam
 
 #variant calling
-#species1_aln.bam and species2_aln.bam are from above.  only comparing between closely realted species pairs
+#species1_aln.bam and species2_aln.bam are from above.  only comparing between closely related species pairs
 samtools mpileup -B species1_aln.bam  species2_aln2.bam > species1_species2.mpileup
 java -ea -Xmx7g -jar <popoolation2-path>/mpileup2sync.jar --input species1_species2.mpileup --output species1_species2_java.sync --fastq-type sanger --min-qual 20 --threads 24
 perl <popoolation2-path>/snp-frequency-diff.pl --input species1_species2_java.sync --output-prefix species1_species2 --min-count 6 --min-coverage 80 --max-coverage 2000
